@@ -13,6 +13,7 @@ import org.springframework.statemachine.listener.StateMachineListenerAdapter;
 import org.springframework.statemachine.state.State;
 
 import java.util.EnumSet;
+import java.util.Optional;
 
 @Slf4j
 @EnableStateMachineFactory
@@ -43,10 +44,14 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
 
   @Override
   public void configure(StateMachineConfigurationConfigurer<PaymentStateEnum, PaymentEventEnum> config) throws Exception {
-    config.withConfiguration().listener(new StateMachineListenerAdapter<>(){
+    config.withConfiguration()
+        .autoStartup(true)
+        .listener(new StateMachineListenerAdapter<>(){
       @Override
       public void stateChanged(State<PaymentStateEnum, PaymentEventEnum> from, State<PaymentStateEnum, PaymentEventEnum> to) {
-        log.info("state changed from {} to {}", from, to);
+        log.info("state changed from {} to {}",
+            Optional.ofNullable(from).map(State::getId).map(Enum::toString).orElse("-"),
+            Optional.ofNullable(to).map(State::getId).map(Enum::toString).orElse("-"));
       }
     });
   }

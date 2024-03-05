@@ -1,21 +1,22 @@
 package com.egon.statemachine.services.impl;
 
-import com.egon.statemachine.dtos.PaymentDto;
 import com.egon.statemachine.enums.PaymentEventEnum;
 import com.egon.statemachine.enums.PaymentStateEnum;
 import com.egon.statemachine.interceptors.PaymentStateChangeInterceptor;
 import com.egon.statemachine.mappers.PaymentMapper;
 import com.egon.statemachine.repositories.PaymentRepository;
 import com.egon.statemachine.services.BasePaymentService;
-import com.egon.statemachine.services.NewPaymentService;
+import com.egon.statemachine.services.PreAuthorizePayment;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-public class NewPaymentServiceImpl extends BasePaymentService implements NewPaymentService {
-  public NewPaymentServiceImpl(
+public class PreAuthorizePaymentImpl extends BasePaymentService implements PreAuthorizePayment {
+  public PreAuthorizePaymentImpl(
       PaymentRepository paymentRepository,
       StateMachineFactory<PaymentStateEnum, PaymentEventEnum> stateMachineFactory,
       PaymentMapper mapper,
@@ -23,13 +24,13 @@ public class NewPaymentServiceImpl extends BasePaymentService implements NewPaym
     super(paymentRepository, stateMachineFactory, mapper, paymentStateChangeInterceptor);
   }
 
+  @Transactional
   @Override
-  public PaymentDto execute(PaymentDto payment) {
-    payment.setState(PaymentStateEnum.NEW);
-    final var paymentToSave = mapper.toEntity(payment);
-    final var savedPayment = paymentRepository.save(paymentToSave);
-    log.debug("Payment with id {} saved ({})", savedPayment.getId(), savedPayment.getState());
+  public StateMachine<PaymentStateEnum, PaymentEventEnum> execute(Long paymentId) {
+    final var stateMachine = build(paymentId);
+    sendEvent(paymentId, stateMachine, PaymentEventEnum.PRE_AUTH_APPROVED);
+    log.debug("Pre auth approved event sent for payment {}", paymentId);
 
-    return mapper.toDto(savedPayment);
+    return stateMachine;
   }
 }

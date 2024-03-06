@@ -1,8 +1,11 @@
 package com.egon.statemachine.configs;
 
+import com.egon.statemachine.actions.PreAuthorizeCreditAction;
+import com.egon.statemachine.actions.ActionUtil;
 import com.egon.statemachine.enums.PaymentEventEnum;
 import com.egon.statemachine.enums.PaymentStateEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.StateMachineConfigurerAdapter;
@@ -19,6 +22,10 @@ import java.util.Optional;
 @EnableStateMachineFactory
 @Configuration
 public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentStateEnum, PaymentEventEnum> {
+
+  @Autowired
+  private PreAuthorizeCreditAction preAuthorizeCreditAction;
+
   @Override
   public void configure(StateMachineStateConfigurer<PaymentStateEnum, PaymentEventEnum> states) throws Exception {
     states.withStates()
@@ -34,6 +41,8 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
     transitions
         .withExternal()
         .source(PaymentStateEnum.NEW).target(PaymentStateEnum.NEW).event(PaymentEventEnum.PRE_AUTHORIZE)
+          .action(ActionUtil.functionalAction)
+          .action(preAuthorizeCreditAction)
         .and()
         .withExternal()
         .source(PaymentStateEnum.NEW).target(PaymentStateEnum.PRE_AUTH).event(PaymentEventEnum.PRE_AUTH_APPROVED)

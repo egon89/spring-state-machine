@@ -28,7 +28,7 @@ public class PreAuthorizePaymentImpl extends BasePaymentService implements PreAu
   @Override
   public StateMachine<PaymentStateEnum, PaymentEventEnum> execute(Long paymentId) {
     final var stateMachine = build(paymentId);
-    sendEvent(paymentId, stateMachine, PaymentEventEnum.PRE_AUTH_APPROVED);
+    sendEvent(paymentId, stateMachine, PaymentEventEnum.PRE_AUTHORIZE);
     log.debug("Pre auth approved event sent for payment {}", paymentId);
 
     return stateMachine;

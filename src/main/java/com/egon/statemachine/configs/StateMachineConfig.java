@@ -48,7 +48,13 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
         .source(PaymentStateEnum.NEW).target(PaymentStateEnum.PRE_AUTH).event(PaymentEventEnum.PRE_AUTH_APPROVED)
         .and()
         .withExternal()
-        .source(PaymentStateEnum.NEW).target(PaymentStateEnum.PRE_AUTH_ERROR).event(PaymentEventEnum.PRE_AUTH_DECLINED);
+        .source(PaymentStateEnum.NEW).target(PaymentStateEnum.PRE_AUTH_ERROR).event(PaymentEventEnum.PRE_AUTH_DECLINED)
+        .and()
+        .withExternal()
+        .source(PaymentStateEnum.PRE_AUTH).target(PaymentStateEnum.AUTH).event(PaymentEventEnum.AUTH_APPROVED)
+        .and()
+        .withExternal()
+        .source(PaymentStateEnum.PRE_AUTH).target(PaymentStateEnum.AUTH_ERROR).event(PaymentEventEnum.AUTH_DECLINED);
   }
 
   @Override

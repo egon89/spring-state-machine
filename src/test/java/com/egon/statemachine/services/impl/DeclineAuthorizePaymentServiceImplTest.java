@@ -4,6 +4,7 @@ import com.egon.statemachine.dtos.PaymentDto;
 import com.egon.statemachine.enums.PaymentStateEnum;
 import com.egon.statemachine.integrations.CheckPreAuthorizeCreditIntegration;
 import com.egon.statemachine.repositories.PaymentRepository;
+import com.egon.statemachine.services.DeclineAuthorizePaymentService;
 import com.egon.statemachine.services.NewPaymentService;
 import com.egon.statemachine.services.PreAuthorizePayment;
 import org.junit.jupiter.api.Test;
@@ -18,7 +19,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
-class PreAuthorizePaymentImplTest {
+class DeclineAuthorizePaymentServiceImplTest {
 
   @Autowired
   NewPaymentService newPaymentService;
@@ -27,38 +28,30 @@ class PreAuthorizePaymentImplTest {
   PreAuthorizePayment preAuthorizePaymentService;
 
   @Autowired
+  DeclineAuthorizePaymentService declineAuthorizePaymentService;
+
+  @Autowired
   PaymentRepository repository;
 
   @MockBean
   CheckPreAuthorizeCreditIntegration checkPreAuthorizeCreditIntegration;
 
   @Test
-  void shouldApprovedPreAuth() {
+  void shouldDeclineAuthorization() {
     when(checkPreAuthorizeCreditIntegration.execute(anyLong())).thenReturn(Boolean.TRUE);
     final var savedPayment = newPaymentService.execute(PaymentDto.builder()
         .amount(BigDecimal.TEN)
         .build());
     assertThat(savedPayment.getState()).isEqualTo(PaymentStateEnum.NEW);
 
-    final var stateMachine = preAuthorizePaymentService.execute(savedPayment.getId());
+    final var preAuthStateMachine = preAuthorizePaymentService.execute(savedPayment.getId());
     final var preAuthorizedPayment = repository.findById(savedPayment.getId()).orElseThrow();
-
-    assertThat(stateMachine.getState().getId()).isEqualTo(PaymentStateEnum.PRE_AUTH);
+    assertThat(preAuthStateMachine.getState().getId()).isEqualTo(PaymentStateEnum.PRE_AUTH);
     assertThat(preAuthorizedPayment.getState()).isEqualTo(PaymentStateEnum.PRE_AUTH);
-  }
 
-  @Test
-  void shouldDeclinedPreAuth() {
-    when(checkPreAuthorizeCreditIntegration.execute(anyLong())).thenReturn(Boolean.FALSE);
-    final var savedPayment = newPaymentService.execute(PaymentDto.builder()
-        .amount(BigDecimal.TEN)
-        .build());
-    assertThat(savedPayment.getState()).isEqualTo(PaymentStateEnum.NEW);
-
-    final var stateMachine = preAuthorizePaymentService.execute(savedPayment.getId());
-    final var preAuthorizedPayment = repository.findById(savedPayment.getId()).orElseThrow();
-
-    assertThat(stateMachine.getState().getId()).isEqualTo(PaymentStateEnum.PRE_AUTH_ERROR);
-    assertThat(preAuthorizedPayment.getState()).isEqualTo(PaymentStateEnum.PRE_AUTH_ERROR);
+    final var authStateMachine = declineAuthorizePaymentService.execute(savedPayment.getId());
+    final var declinedPayment = repository.findById(savedPayment.getId()).orElseThrow();
+    assertThat(authStateMachine.getState().getId()).isEqualTo(PaymentStateEnum.AUTH_ERROR);
+    assertThat(declinedPayment.getState()).isEqualTo(PaymentStateEnum.AUTH_ERROR);
   }
 }

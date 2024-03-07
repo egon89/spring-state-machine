@@ -35,15 +35,15 @@ public abstract class BasePaymentService {
   }
 
   protected StateMachine<PaymentStateEnum, PaymentEventEnum> build(Long paymentId) {
-    final var payment = paymentRepository.getReferenceById(paymentId);
+    final var payment = paymentRepository.findById(paymentId).orElseThrow();
     final var stateMachine = stateMachineFactory.getStateMachine(Long.toString((payment.getId())));
-    stateMachine.stopReactively().subscribe();
+    stateMachine.stopReactively().block();
     stateMachine.getStateMachineAccessor()
         .doWithAllRegions(sma -> {
           sma.addStateMachineInterceptor(paymentStateChangeInterceptor);
-          sma.resetStateMachineReactively(new DefaultStateMachineContext<>(payment.getState(), null, null, null));
+          sma.resetStateMachineReactively(new DefaultStateMachineContext<>(payment.getState(), null, null, null)).block();
         });
-    stateMachine.startReactively().subscribe();
+    stateMachine.startReactively().block();
     return stateMachine;
   }
 }

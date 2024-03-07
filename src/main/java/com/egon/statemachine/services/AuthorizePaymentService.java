@@ -4,6 +4,6 @@ import com.egon.statemachine.enums.PaymentEventEnum;
 import com.egon.statemachine.enums.PaymentStateEnum;
 import org.springframework.statemachine.StateMachine;
 
-public interface AuthorizePayment {
+public interface AuthorizePaymentService {
   StateMachine<PaymentStateEnum, PaymentEventEnum> execute(Long paymentId);
 }

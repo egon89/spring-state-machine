@@ -34,10 +34,11 @@ public class PaymentStateChangeInterceptor
     Optional.ofNullable((Long) msg.getHeaders().get(BasePaymentService.PAYMENT_ID_HEADER))
         .ifPresent(paymentId -> {
           final var payment = repository.findById(paymentId).orElseThrow(() -> new RuntimeException("Not found!"));
-          log.debug("Payment {}: from {} to {}", paymentId, payment.getState(), state.getId());
+          final var previousState = payment.getState();
           payment.setState(state.getId());
           final var savedPayment = repository.save(payment);
-          log.debug("Payment {} changed to {}", savedPayment.getId(), savedPayment.getState());
+          log.debug("Payment {} changed from {} to {}",
+              savedPayment.getId(), previousState, savedPayment.getState());
         });
   }
 }

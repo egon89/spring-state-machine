@@ -4,6 +4,7 @@ import com.egon.statemachine.actions.PreAuthorizeCreditAction;
 import com.egon.statemachine.actions.ActionUtil;
 import com.egon.statemachine.enums.PaymentEventEnum;
 import com.egon.statemachine.enums.PaymentStateEnum;
+import com.egon.statemachine.guards.GuardUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -41,6 +42,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
     transitions
         .withExternal()
         .source(PaymentStateEnum.NEW).target(PaymentStateEnum.NEW).event(PaymentEventEnum.PRE_AUTHORIZE)
+          .guard(GuardUtil.PAYMENT_ID_GUARD)
           .action(ActionUtil.functionalAction)
           .action(preAuthorizeCreditAction)
         .and()

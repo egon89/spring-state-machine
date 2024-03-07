@@ -1,5 +1,6 @@
 package com.egon.statemachine.actions;
 
+import com.egon.statemachine.StateContextHelper;
 import com.egon.statemachine.enums.PaymentEventEnum;
 import com.egon.statemachine.enums.PaymentStateEnum;
 import com.egon.statemachine.integrations.CheckPreAuthorizeCreditIntegration;
@@ -21,7 +22,7 @@ public class PreAuthorizeCreditAction implements Action<PaymentStateEnum, Paymen
 
   @Override
   public void execute(StateContext<PaymentStateEnum, PaymentEventEnum> stateContext) {
-    final var paymentId = (Long) stateContext.getMessageHeader(BasePaymentService.PAYMENT_ID_HEADER);
+    final var paymentId = StateContextHelper.getPaymentId(stateContext);
     if (checkPreAuthorizeCredit.execute(paymentId)) {
       log.debug("PreAuthorizeAction: approved for payment {}", paymentId);
       stateContext.getStateMachine().sendEvent(

@@ -1,12 +1,11 @@
 package com.egon.statemachine.configs;
 
-import com.egon.statemachine.actions.PreAuthorizeCreditAction;
 import com.egon.statemachine.actions.ActionUtil;
 import com.egon.statemachine.enums.PaymentEventEnum;
 import com.egon.statemachine.enums.PaymentStateEnum;
 import com.egon.statemachine.guards.GuardUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.StateMachineConfigurerAdapter;
@@ -21,11 +20,11 @@ import java.util.Optional;
 
 @Slf4j
 @EnableStateMachineFactory
+@RequiredArgsConstructor
 @Configuration
 public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentStateEnum, PaymentEventEnum> {
 
-  @Autowired
-  private PreAuthorizeCreditAction preAuthorizeCreditAction;
+  private final ActionFacade actionFacade;
 
   @Override
   public void configure(StateMachineStateConfigurer<PaymentStateEnum, PaymentEventEnum> states) throws Exception {
@@ -44,19 +43,23 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<PaymentSta
         .source(PaymentStateEnum.NEW).target(PaymentStateEnum.NEW).event(PaymentEventEnum.PRE_AUTHORIZE)
           .guard(GuardUtil.PAYMENT_ID_GUARD)
           .action(ActionUtil.functionalAction)
-          .action(preAuthorizeCreditAction)
+          .action(actionFacade.preAuthorizeCreditAction)
         .and()
         .withExternal()
         .source(PaymentStateEnum.NEW).target(PaymentStateEnum.PRE_AUTH).event(PaymentEventEnum.PRE_AUTH_APPROVED)
+          .action(actionFacade.preAuthorizeApprovedAction)
         .and()
         .withExternal()
         .source(PaymentStateEnum.NEW).target(PaymentStateEnum.PRE_AUTH_ERROR).event(PaymentEventEnum.PRE_AUTH_DECLINED)
+          .action(actionFacade.preAuthorizeDeclinedAction)
         .and()
         .withExternal()
         .source(PaymentStateEnum.PRE_AUTH).target(PaymentStateEnum.AUTH).event(PaymentEventEnum.AUTH_APPROVED)
+          .action(actionFacade.authorizationApprovedAction)
         .and()
         .withExternal()
-        .source(PaymentStateEnum.PRE_AUTH).target(PaymentStateEnum.AUTH_ERROR).event(PaymentEventEnum.AUTH_DECLINED);
+        .source(PaymentStateEnum.PRE_AUTH).target(PaymentStateEnum.AUTH_ERROR).event(PaymentEventEnum.AUTH_DECLINED)
+          .action(actionFacade.authorizationDeclinedAction);
   }
 
   @Override
